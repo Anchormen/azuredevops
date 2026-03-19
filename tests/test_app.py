@@ -1,23 +1,23 @@
 import re
 
 import pytest
+from app.main import app
+from fastapi import status
+from fastapi.testclient import TestClient
 
-from app.app import create_app
 
-
-@pytest.fixture
+@pytest.fixture()
 def client():
-    app = create_app()
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        yield client
+    yield TestClient(app)
 
 
 def test_square(client):
-    answer = client.get("square_number?number=2")
-    assert b"Square of 2.0 is 4.0" == answer.data
+    response = client.get("/square_number?number=2")
+    assert response.status_code == status.HTTP_200_OK
+    assert "Square of 2.0 is 4.0" == response.json()
 
 
 def test_hello_world(client):
-    answer = client.get("/")
-    assert re.match(b".* on host .*", answer.data)
+    response = client.get("/")
+    assert response.status_code == status.HTTP_200_OK
+    assert re.match(".* on host .*", response.json())
